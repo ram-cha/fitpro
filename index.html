@@ -85,26 +85,30 @@
     };
 
     // AI se baat karne ka function
-    window.askGemini = async function() {
-        const userText = document.getElementById('userInput').value;
-        const outputDiv = document.getElementById('output');
-        const apiKey = localStorage.getItem("gemini_api_key");
+window.askGemini = async function() {
+    const userText = document.getElementById('userInput').value;
+    const outputDiv = document.getElementById('output');
+    const apiKey = localStorage.getItem("gemini_api_key");
 
-        if (!userText) return alert("Kuch toh likho!");
+    if (!userText) return alert("Kuch toh likho!");
 
-        outputDiv.innerText = "AI soch raha hai... ⏳";
+    outputDiv.innerText = "AI soch raha hai... ⏳";
 
-        try {
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        
+        // YAHAN BADLAV KIYA HAI: 'gemini-pro' try karein
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-            const result = await model.generateContent(userText);
-            const response = await result.response;
-            outputDiv.innerText = response.text();
-        } catch (error) {
-            outputDiv.innerHTML = `<span style="color:red">Error: ${error.message}. Shayad API key galat hai ya net band hai.</span>`;
-        }
-    };
+        const result = await model.generateContent(userText);
+        const response = await result.response;
+        outputDiv.innerText = response.text();
+    } catch (error) {
+        console.error(error);
+        // Agar gemini-pro bhi fail ho toh gemini-1.5-flash-latest try karein
+        outputDiv.innerHTML = `<span style="color:red">Error: ${error.message}</span>`;
+    }
+};
 
     // Page load par check karein
     checkKey();
