@@ -2,199 +2,534 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal AI Dashboard | Junior Devlok</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StrongApp AI PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --accent: #238636; --border: #30363d; --error: #f85149; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar */
-        .sidebar { width: 350px; background: var(--card); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
-        h2 { color: white; font-size: 1.4rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px; }
-        label { font-size: 11px; color: #8b949e; font-weight: bold; text-transform: uppercase; }
-        input, select, textarea { background: var(--bg); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
-        input:focus { border-color: #58a6ff; outline: none; }
-        
-        /* Main Section */
-        .main { flex: 1; display: flex; flex-direction: column; padding: 20px; background: var(--bg); }
-        #chatDisplay { flex: 1; overflow-y: auto; background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 25px; margin-bottom: 20px; scroll-behavior: smooth; }
-        
-        /* Chat Bubbles */
-        .msg { margin-bottom: 20px; padding: 15px; border-radius: 8px; line-height: 1.6; position: relative; }
-        .user-msg { background: #1f2937; border-left: 4px solid #58a6ff; color: #adbac7; }
-        .ai-msg { background: #21262d; border-left: 4px solid var(--accent); color: #ecf2f8; }
-        .tag { font-size: 10px; background: #30363d; padding: 2px 8px; border-radius: 10px; position: absolute; top: -10px; right: 10px; color: #8b949e; border: 1px solid var(--border); }
-
-        /* Controls */
-        .input-group { display: flex; gap: 15px; align-items: flex-end; }
-        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        button:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
-        .btn-secondary { background: #30363d; font-size: 12px; padding: 10px; }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f1f5f9; color: #1e293b; margin: 0; padding: 0; user-select: none; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
+        .nav-glass { background: rgba(255, 255, 255, 0.98); border-top: 1px solid rgba(226, 232, 240, 0.8); }
+        .tab-content { display: none; animation: slideUp 0.35s ease forwards; }
+        .tab-content.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: translateY(0) } }
+        .meal-card { transition: all 0.3s ease; border-left-width: 6px; }
+        .meal-card.completed { opacity: 0.5; transform: scale(0.98); }
+        .meal-card.current { box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); animation: pulse-border 2s infinite; }
+        @keyframes pulse-border { 0%, 100% { border-left-width: 6px } 50% { border-left-width: 10px } }
+        .progress-ring { transition: stroke-dashoffset 1s ease; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .card-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); }
+        .active-tab { color: #10b981 !important; }
+        .active-tab i { transform: translateY(-4px); filter: drop-shadow(0 4px 6px rgba(16, 185, 129, 0.4)); }
+        .modal-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 2rem 2rem 0 0; z-index: 100; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-sheet.show { transform: translateY(0); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 90; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+        .nutrient-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        input[type=number] { -moz-appearance: textfield; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
     </style>
 </head>
-<body>
+<body class="pb-24">
 
-<div class="sidebar">
-    <h2>🚀 AI Playground</h2>
-    
-    <label>Platform Preset</label>
-    <select id="provider" onchange="applyPreset()">
-        <option value="groq">Groq Cloud (Llama 3)</option>
-        <option value="gemini">Google Gemini (OpenAI Mode)</option>
-        <option value="openai">OpenAI (GPT Models)</option>
-        <option value="custom">Custom API</option>
-    </select>
-
-    <label>API Endpoint (Base URL)</label>
-    <input type="text" id="baseUrl" value="https://api.groq.com/openai/v1/chat/completions">
-
-    <label>Secret API Key</label>
-    <input type="password" id="apiKey" placeholder="gsk_... or sk-...">
-
-    <label>Model ID</label>
-    <input type="text" id="modelName" value="llama3-8b-8192">
-
-    <button onclick="saveSettings()">Save Configuration ✅</button>
-    <button class="btn-secondary" onclick="clearChat()">Clear Chat History 🗑️</button>
-    
-    <div style="font-size: 11px; color: #8b949e; margin-top: auto;">
-        <b>Status:</b> <span id="statusIndicator" style="color: #8b949e;">Ready</span><br>
-        Keys aapke local browser mein save hain.
+<header class="fixed top-0 left-0 right-0 glass z-50 px-5 py-3.5 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-white" onclick="openAISettings()">
+            <i class="fas fa-robot text-sm"></i>
+        </div>
+        <div>
+            <h1 class="text-base font-extrabold text-slate-800">StrongApp AI</h1>
+            <p id="live-clock" class="text-[10px] text-slate-400 font-bold font-mono"></p>
+        </div>
     </div>
-</div>
+    <div class="text-right">
+        <p id="header-date" class="text-[9px] font-black text-slate-400 uppercase tracking-widest"></p>
+        <span class="text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">AI SYNC ACTIVE</span>
+    </div>
+</header>
 
-<div class="main">
-    <div id="chatDisplay">
-        <div class="ai-msg">
-            <b>System:</b> Swagat hai! Apni API details sidebar mein bhariye aur chat shuru kijiye.
+<main class="pt-20 px-4 max-w-lg mx-auto">
+    <div id="tab-home" class="tab-content active space-y-4">
+        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 rounded-[2.5rem] p-6 text-white relative overflow-hidden card-shadow">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-emerald-400 text-[9px] font-black uppercase tracking-widest">Day Progress</p>
+                    <h2 class="text-4xl font-black mt-1"><span id="cal-count">0</span> <span class="text-sm font-normal text-slate-400">/ 2500 kcal</span></h2>
+                </div>
+                <div class="text-right">
+                    <p id="day-progress-percent" class="text-2xl font-black text-emerald-400">0%</p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase">Goal</p>
+                </div>
+            </div>
+            <div class="w-full bg-white/10 h-3 rounded-full overflow-hidden mb-6">
+                <div id="cal-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-1000" style="width:0%"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-white/5 rounded-2xl p-3 border border-white/10 text-center">
+                    <p class="text-[8px] text-emerald-400 font-black uppercase">Protein</p>
+                    <p id="home-protein" class="text-sm font-black mt-1">0g</p>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-3 border border-white/10 text-center">
+                    <p class="text-[8px] text-blue-400 font-black uppercase">Carbs</p>
+                    <p id="home-carbs" class="text-sm font-black mt-1">0g</p>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-3 border border-white/10 text-center">
+                    <p class="text-[8px] text-purple-400 font-black uppercase">Fat</p>
+                    <p id="home-fat" class="text-sm font-black mt-1">0g</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="next-meal-card" class="bg-white rounded-2xl p-5 card-shadow flex items-center gap-4 border border-slate-100">
+            <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 text-xl">
+                <i id="hint-icon" class="fas fa-utensils"></i>
+            </div>
+            <div class="flex-1">
+                <p id="hint-status" class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Current Status</p>
+                <h4 id="hint-name" class="font-black text-slate-800 text-base">Wait...</h4>
+                <p id="hint-time" class="text-[11px] text-slate-400 font-bold"></p>
+            </div>
+        </div>
+
+        <div onclick="openModal()" class="bg-emerald-500 rounded-2xl p-5 card-shadow flex justify-between items-center cursor-pointer active:scale-95 transition">
+            <div class="text-white">
+                <p class="text-[9px] font-black opacity-80 uppercase tracking-widest">Check Saman</p>
+                <h3 class="text-lg font-black" id="prep-status">Inventory List →</h3>
+            </div>
+            <i class="fas fa-chevron-right text-white/50"></i>
         </div>
     </div>
 
-    <div class="input-group">
-        <textarea id="promptInput" rows="2" placeholder="AI se kuch puchiye..."></textarea>
-        <button id="sendBtn" onclick="executeAI()">SEND ✨</button>
+    <div id="tab-meals" class="tab-content space-y-4">
+        <h2 class="text-xl font-black text-slate-800">Meal Plan</h2>
+        <div id="meal-list" class="space-y-3"></div>
+    </div>
+
+    <div id="tab-progress" class="tab-content space-y-4">
+        <h2 class="text-xl font-black text-slate-800">Weight & BMI</h2>
+        <div class="bg-white rounded-[2rem] p-8 card-shadow text-center">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Current Weight</p>
+            <div class="flex items-baseline justify-center gap-1">
+                <span id="curr-weight-big" class="text-6xl font-black text-slate-800">--</span>
+                <span class="text-xl font-bold text-slate-400">kg</span>
+            </div>
+            <div id="weight-change" class="mt-4 hidden">
+                <span id="weight-change-text" class="text-xs font-black px-4 py-1.5 rounded-full"></span>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-2xl p-6 text-white card-shadow">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Log New Entry</p>
+            <div class="flex gap-3">
+                <input type="number" id="weight-input" placeholder="75.5" class="flex-1 bg-white/10 rounded-xl px-4 py-3 text-white outline-none border border-white/10">
+                <button onclick="logWeight()" class="bg-emerald-500 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition">Log</button>
+            </div>
+        </div>
+
+        <div id="weight-history" class="space-y-3"></div>
+    </div>
+</main>
+
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal()"></div>
+
+<div id="ai-settings-modal" class="modal-sheet">
+    <div class="p-6">
+        <h2 class="text-xl font-black mb-4 text-slate-800">AI Setup ⚙️</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase">Provider</label>
+                <select id="ai-provider" onchange="applyAIPreset()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mt-1 text-sm outline-none">
+                    <option value="gemini">Google Gemini</option>
+                    <option value="groq">Groq Cloud</option>
+                    <option value="openai">OpenAI</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase">API Key</label>
+                <input type="password" id="ai-key" placeholder="Paste Key Here" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mt-1 text-sm outline-none">
+            </div>
+            <div class="hidden">
+                <input type="text" id="ai-url">
+                <input type="text" id="ai-model">
+            </div>
+            <button onclick="saveAISettings()" class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest">Save Settings</button>
+        </div>
     </div>
 </div>
 
-<script>
-    // 1. Load Data on Startup
-    window.onload = () => {
-        const saved = JSON.parse(localStorage.getItem('universal_ai_v2') || '{}');
-        if(saved.apiKey) {
-            document.getElementById('apiKey').value = saved.apiKey;
-            document.getElementById('baseUrl').value = saved.baseUrl;
-            document.getElementById('modelName').value = saved.modelName;
-            document.getElementById('provider').value = saved.provider;
-        }
-    };
-
-    // 2. Presets Logic
-    function applyPreset() {
-        const p = document.getElementById('provider').value;
-        const b = document.getElementById('baseUrl');
-        const m = document.getElementById('modelName');
-
-        const presets = {
-            groq: { url: "https://api.groq.com/openai/v1/chat/completions", model: "llama3-8b-8192" },
-            gemini: { url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", model: "gemini-1.5-flash" },
-            openai: { url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" }
-        };
-
-        if(presets[p]) {
-            b.value = presets[p].url;
-            m.value = presets[p].model;
-        }
-    }
-
-    // 3. Save to LocalStorage
-    function saveSettings() {
-        const settings = {
-            provider: document.getElementById('provider').value,
-            baseUrl: document.getElementById('baseUrl').value,
-            apiKey: document.getElementById('apiKey').value,
-            modelName: document.getElementById('modelName').value
-        };
-        localStorage.setItem('universal_ai_v2', JSON.stringify(settings));
-        alert("Settings saved successfully!");
-    }
-
-    function clearChat() {
-        document.getElementById('chatDisplay').innerHTML = '<div class="ai-msg">Chat cleared. Ready for new questions.</div>';
-    }
-
-    // 4. MAIN EXECUTION LOGIC
-    async function executeAI() {
-        const btn = document.getElementById('sendBtn');
-        const display = document.getElementById('chatDisplay');
-        const input = document.getElementById('promptInput');
-        const status = document.getElementById('statusIndicator');
+<div id="log-meal-modal" class="modal-sheet">
+    <div class="p-6 bg-white rounded-t-[2rem]">
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="log-meal-title" class="text-xl font-black text-slate-800">Log Meal</h2>
+            <button onclick="closeModal()" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500"><i class="fas fa-times"></i></button>
+        </div>
         
-        const config = JSON.parse(localStorage.getItem('universal_ai_v2'));
-        const prompt = input.value.trim();
+        <div class="space-y-4">
+            <input type="hidden" id="log-meal-id">
+            <div class="relative">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Detailed Description</label>
+                <div class="flex gap-2 mt-1">
+                    <input type="text" id="log-meal-text" placeholder="e.g., 2 Eggs and 1 Toast" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500">
+                    <button onclick="aiCalcMeal()" id="ai-calc-btn" class="bg-emerald-500 text-white w-12 rounded-xl active:scale-95 transition flex items-center justify-center">
+                        <i class="fas fa-magic"></i>
+                    </button>
+                </div>
+                <small id="meal-ai-status" class="hidden"></small>
+            </div>
 
-        if(!prompt) return;
-        if(!config || !config.apiKey) return alert("Pehle Settings save karein!");
-
-        // Update UI
-        display.innerHTML += `<div class="msg user-msg"><b>You:</b><br>${prompt}</div>`;
-        input.value = "";
-        btn.disabled = true;
-        status.innerText = "Thinking...";
-        status.style.color = "#e3b341";
-
-        try {
-            const response = await fetch(config.baseUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${config.apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: config.modelName,
-                    messages: [{ role: "user", content: prompt }]
-                })
-            });
-
-            const data = await response.json();
-            console.log("Raw Response:", data);
-
-            let finalReply = "";
-
-            // --- SMART PARSING STARTS HERE ---
-            if (data.error) {
-                finalReply = `<span style="color:var(--error)">API Error: ${data.error.message}</span>`;
-            } else if (data.choices && data.choices[0] && data.choices[0].message) {
-                finalReply = data.choices[0].message.content; // OpenAI/Groq/Gemini-OpenAI-Mode
-            } else if (data.candidates && data.candidates[0]) {
-                finalReply = data.candidates[0].content.parts[0].text; // Pure Gemini Mode
-            } else {
-                finalReply = "Sorry, response format samajh nahi aaya. Console check karein.";
-            }
-            // --- SMART PARSING ENDS ---
-
-            display.innerHTML += `
-                <div class="msg ai-msg">
-                    <span class="tag">${config.modelName}</span>
-                    ${finalReply}
-                </div>`;
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Calories</label>
+                    <input type="number" id="log-meal-kcal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mt-1 text-sm">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Protein (g)</label>
+                    <input type="number" id="log-meal-p" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mt-1 text-sm">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Carbs (g)</label>
+                    <input type="number" id="log-meal-c" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mt-1 text-sm">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Fat (g)</label>
+                    <input type="number" id="log-meal-f" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mt-1 text-sm">
+                </div>
+            </div>
             
-            status.innerText = "Online";
-            status.style.color = "#238636";
+            <button onclick="saveLogMeal()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Confirm Entry</button>
+        </div>
+    </div>
+</div>
 
-        } catch (err) {
-            display.innerHTML += `<div class="msg" style="color:var(--error)"><b>Network Error:</b> ${err.message}</div>`;
-            status.innerText = "Error";
-            status.style.color = "red";
-        } finally {
-            btn.disabled = false;
-            display.scrollTop = display.scrollHeight;
+<div id="grocery-modal" class="modal-sheet">
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-black text-slate-800">Morning Inventory</h2>
+            <button onclick="closeModal()" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="flex gap-2 mb-6">
+            <input type="text" id="ai-grocery-input" placeholder="Add anything (e.g. 50g Paneer)" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
+            <button onclick="aiAddGrocery()" id="ai-grocery-btn" class="bg-slate-900 text-white px-5 rounded-xl"><i class="fas fa-plus"></i></button>
+        </div>
+        <small id="grocery-ai-status" class="hidden"></small>
+
+        <div id="grocery-list" class="space-y-3 overflow-y-auto max-h-[40vh] mb-6"></div>
+        
+        <button onclick="closeModal()" class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest">Done</button>
+    </div>
+</div>
+
+<div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest opacity-0 transition-all z-[200]"></div>
+
+<nav class="fixed bottom-0 left-0 right-0 nav-glass px-4 pt-4 pb-8 z-50 rounded-t-[2.5rem]">
+    <div class="max-w-lg mx-auto flex justify-around items-center">
+        <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 text-slate-300 transition-all">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-[8px] font-black uppercase">Home</span>
+        </button>
+        <button onclick="switchTab('meals')" id="nav-meals" class="flex flex-col items-center gap-1 text-slate-300 transition-all">
+            <i class="fas fa-utensils text-xl"></i>
+            <span class="text-[8px] font-black uppercase">Plan</span>
+        </button>
+        <button onclick="switchTab('progress')" id="nav-progress" class="flex flex-col items-center gap-1 text-slate-300 transition-all">
+            <i class="fas fa-chart-line text-xl"></i>
+            <span class="text-[8px] font-black uppercase">Stats</span>
+        </button>
+    </div>
+</nav>
+
+<script>
+const SK = 'strong_v5_pro';
+
+const MEALS = [
+    {id:1,name:"Morning Kickstart",time:"07:00",kcal:80,icon:"fa-sun",color:"#f59e0b",desc:"Warm Water + Almonds",protein:3,carbs:4,fat:6},
+    {id:2,name:"Banana Power Shake",time:"08:30",kcal:650,icon:"fa-bolt",color:"#10b981",desc:"Banana x2 + Milk 300ml",protein:18,carbs:95,fat:14},
+    {id:3,name:"Mid-Snack",time:"11:30",kcal:180,icon:"fa-apple-alt",color:"#3b82f6",desc:"Roasted Chana + Fruit",protein:8,carbs:28,fat:3},
+    {id:4,name:"Balanced Lunch",time:"13:30",kcal:680,icon:"fa-bowl-rice",color:"#f97316",desc:"3 Roti + Dal + Veggie",protein:28,carbs:95,fat:15},
+    {id:5,name:"Evening Meal",time:"17:30",kcal:280,icon:"fa-egg",color:"#8b5cf6",desc:"Paneer 100g / Poha",protein:20,carbs:22,fat:12},
+    {id:6,name:"Dinner",time:"20:30",kcal:420,icon:"fa-moon",color:"#6366f1",desc:"Khichdi + 2 tsp Ghee",protein:14,carbs:68,fat:12}
+];
+
+// Main State
+let state = {
+    today: { water: 0, completed: [], grocery: [], date: new Date().toLocaleDateString() },
+    weights: [],
+    activeTab: 'home',
+    ai: { provider: 'gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', modelName: 'gemini-1.5-flash', apiKey: '' },
+    customGrocery: []
+};
+
+function load() {
+    const s = JSON.parse(localStorage.getItem(SK) || 'null');
+    if (s) {
+        state = {...state, ...s};
+        // Reset daily if date changed
+        if (state.today.date !== new Date().toLocaleDateString()) {
+            state.today = { water: 0, completed: [], grocery: [], date: new Date().toLocaleDateString() };
         }
     }
-</script>
+}
 
+function save() { localStorage.setItem(SK, JSON.stringify(state)); }
+
+// Tab Switching
+function switchTab(id) {
+    state.activeTab = id;
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(e => e.classList.remove('active-tab'));
+    document.getElementById('tab-' + id).classList.add('active');
+    document.getElementById('nav-' + id).classList.add('active-tab');
+    save();
+}
+
+// AI Integration
+function applyAIPreset() {
+    const p = document.getElementById('ai-provider').value;
+    const presets = {
+        groq: { url: "https://api.groq.com/openai/v1/chat/completions", model: "llama-3.1-8b-instant" },
+        gemini: { url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", model: "gemini-1.5-flash" },
+        openai: { url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" }
+    };
+    if (presets[p]) {
+        document.getElementById('ai-url').value = presets[p].url;
+        document.getElementById('ai-model').value = presets[p].model;
+    }
+}
+
+function openAISettings() {
+    applyAIPreset();
+    document.getElementById('ai-key').value = state.ai.apiKey;
+    document.getElementById('modal-overlay').classList.add('show');
+    document.getElementById('ai-settings-modal').classList.add('show');
+}
+
+function saveAISettings() {
+    state.ai = {
+        provider: document.getElementById('ai-provider').value,
+        baseUrl: document.getElementById('ai-url').value,
+        modelName: document.getElementById('ai-model').value,
+        apiKey: document.getElementById('ai-key').value
+    };
+    save(); showToast('AI Config Saved!'); closeModal();
+}
+
+// SMART ANALYSIS LOGIC
+async function aiCalcMeal() {
+    const text = document.getElementById('log-meal-text').value.trim();
+    if (!text) return showToast('Type what you ate!');
+    if (!state.ai.apiKey) return showToast('Setup AI Key first!');
+
+    const btn = document.getElementById('ai-calc-btn');
+    const status = document.getElementById('meal-ai-status');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    status.className = 'text-[9px] font-bold mt-1 text-amber-500 block';
+    status.innerText = 'AI is analyzing...';
+
+    const prompt = `Analyze: "${text}". Reply ONLY with JSON: {"kcal":int, "p":int, "c":int, "f":int}. No prose.`;
+
+    try {
+        const res = await fetch(state.ai.baseUrl, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${state.ai.apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: state.ai.modelName, messages: [{ role: "user", content: prompt }] })
+        });
+        const data = await res.json();
+        const aiResponse = data.choices[0].message.content;
+        const result = JSON.parse(aiResponse.match(/\{.*\}/)[0]);
+
+        document.getElementById('log-meal-kcal').value = result.kcal;
+        document.getElementById('log-meal-p').value = result.p;
+        document.getElementById('log-meal-c').value = result.c;
+        document.getElementById('log-meal-f').value = result.f;
+        status.innerText = 'Analysis Complete! ✅';
+        status.className = 'text-[9px] font-bold mt-1 text-emerald-500 block';
+    } catch (e) {
+        showToast('AI Analysis Failed');
+        status.innerText = 'Failed. Try manual.';
+    } finally {
+        btn.innerHTML = '<i class="fas fa-magic"></i>';
+    }
+}
+
+async function aiAddGrocery() {
+    const text = document.getElementById('ai-grocery-input').value.trim();
+    if (!text) return;
+    if (!state.ai.apiKey) return showToast('Setup AI Key first!');
+
+    const status = document.getElementById('grocery-ai-status');
+    status.innerText = 'Generating item...';
+    status.className = 'text-[9px] font-bold mb-2 text-amber-500 block';
+
+    const prompt = `Item: "${text}". Reply ONLY JSON: {"name":string, "kcal":int, "p":int, "c":int, "f":int, "icon":emoji}`;
+
+    try {
+        const res = await fetch(state.ai.baseUrl, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${state.ai.apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: state.ai.modelName, messages: [{ role: "user", content: prompt }] })
+        });
+        const data = await res.json();
+        const result = JSON.parse(data.choices[0].message.content.match(/\{.*\}/)[0]);
+        
+        const newItem = {
+            id: 'custom_' + Date.now(),
+            name: result.name,
+            kcal: result.kcal,
+            protein: result.p,
+            carbs: result.c,
+            fat: result.f,
+            icon: result.icon
+        };
+        state.customGrocery.push(newItem);
+        save(); renderGrocery();
+        document.getElementById('ai-grocery-input').value = '';
+        status.innerText = 'Added!';
+    } catch (e) { showToast('Error adding item'); }
+}
+
+// Modal Handlers
+function openModal() {
+    document.getElementById('modal-overlay').classList.add('show');
+    document.getElementById('grocery-modal').classList.add('show');
+    renderGrocery();
+}
+
+function handleMealClick(id) {
+    const m = MEALS.find(x => x.id === id);
+    document.getElementById('log-meal-id').value = m.id;
+    document.getElementById('log-meal-text').value = m.desc;
+    document.getElementById('log-meal-kcal').value = m.kcal;
+    document.getElementById('log-meal-p').value = m.protein;
+    document.getElementById('log-meal-c').value = m.carbs;
+    document.getElementById('log-meal-f').value = m.fat;
+    document.getElementById('log-meal-modal').classList.add('show');
+    document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() {
+    document.querySelectorAll('.modal-sheet, .modal-overlay').forEach(e => e.classList.remove('show'));
+}
+
+function saveLogMeal() {
+    const id = parseInt(document.getElementById('log-meal-id').value);
+    const log = {
+        id,
+        kcal: parseInt(document.getElementById('log-meal-kcal').value),
+        p: parseInt(document.getElementById('log-meal-p').value),
+        c: parseInt(document.getElementById('log-meal-c').value),
+        f: parseInt(document.getElementById('log-meal-f').value),
+        text: document.getElementById('log-meal-text').value
+    };
+    state.today.completed.push(log);
+    save(); renderHome(); renderMeals(); closeModal(); showToast('Meal Logged!');
+}
+
+function logWeight() {
+    const val = parseFloat(document.getElementById('weight-input').value);
+    if (!val) return;
+    state.weights.unshift({ val, date: new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) });
+    document.getElementById('weight-input').value = '';
+    save(); renderWeights(); showToast('Weight Saved!');
+}
+
+// Rendering Logic
+function renderHome() {
+    const n = state.today.completed.reduce((a, b) => ({
+        kcal: a.kcal + b.kcal, p: a.p + b.p, c: a.c + b.c, f: a.f + b.f
+    }), {kcal:0, p:0, c:0, f:0});
+
+    document.getElementById('cal-count').innerText = n.kcal;
+    const pct = Math.min((n.kcal / 2500) * 100, 100);
+    document.getElementById('cal-progress-bar').style.width = pct + '%';
+    document.getElementById('day-progress-percent').innerText = Math.round(pct) + '%';
+    document.getElementById('home-protein').innerText = n.p + 'g';
+    document.getElementById('home-carbs').innerText = n.c + 'g';
+    document.getElementById('home-fat').innerText = n.f + 'g';
+    updateMealHint();
+}
+
+function renderMeals() {
+    const cont = document.getElementById('meal-list');
+    cont.innerHTML = MEALS.map(m => {
+        const done = state.today.completed.find(x => x.id === m.id);
+        return `
+            <div onclick="handleMealClick(${m.id})" class="meal-card ${done ? 'completed' : ''} bg-white p-4 rounded-[1.5rem] card-shadow flex items-center gap-4 border-l-[6px]" style="border-left-color:${m.color}">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:${m.color}15; color:${m.color}">
+                    <i class="fas ${m.icon}"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-slate-800">${m.name}</h4>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">${m.time}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs font-black">${done ? done.kcal : m.kcal} kcal</p>
+                    <p class="text-[9px] font-bold text-emerald-500">${done ? 'LOGGED' : 'PENDING'}</p>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function renderWeights() {
+    const list = document.getElementById('weight-history');
+    if (state.weights.length > 0) {
+        document.getElementById('curr-weight-big').innerText = state.weights[0].val;
+        list.innerHTML = state.weights.slice(0, 5).map(w => `
+            <div class="bg-white p-4 rounded-2xl card-shadow flex justify-between items-center">
+                <span class="text-xs font-black text-slate-400">${w.date}</span>
+                <span class="text-base font-black text-slate-800">${w.val} kg</span>
+            </div>`).join('');
+    }
+}
+
+function renderGrocery() {
+    const cont = document.getElementById('grocery-list');
+    cont.innerHTML = state.customGrocery.map(item => `
+        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+            <span class="text-lg">${item.icon}</span>
+            <div class="flex-1">
+                <p class="text-xs font-bold text-slate-800">${item.name}</p>
+                <p class="text-[9px] text-slate-400">P:${item.protein}g C:${item.carbs}g F:${item.fat}g</p>
+            </div>
+            <button onclick="deleteItem('${item.id}')" class="text-red-400"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
+}
+
+function deleteItem(id) {
+    state.customGrocery = state.customGrocery.filter(x => x.id !== id);
+    save(); renderGrocery();
+}
+
+function updateMealHint() {
+    const now = new Date();
+    const cur = now.getHours() * 60 + now.getMinutes();
+    const next = MEALS.find(m => {
+        const [h, mi] = m.time.split(':').map(Number);
+        return (h * 60 + mi) > cur;
+    }) || MEALS[0];
+    
+    document.getElementById('hint-name').innerText = next.name;
+    document.getElementById('hint-time').innerText = "Upcoming at " + next.time;
+}
+
+function showToast(m) {
+    const t = document.getElementById('toast');
+    t.innerText = m; t.style.opacity = 1;
+    setTimeout(() => t.style.opacity = 0, 2000);
+}
+
+function init() {
+    load();
+    setInterval(() => {
+        document.getElementById('live-clock').innerText = new Date().toLocaleTimeString();
+        document.getElementById('header-date').innerText = new Date().toLocaleDateString(undefined, {day:'numeric', month:'short'});
+    }, 1000);
+    renderHome(); renderMeals(); renderWeights();
+}
+
+window.onload = init;
+</script>
 </body>
 </html>
