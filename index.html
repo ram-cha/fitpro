@@ -61,37 +61,34 @@
     }
 
     // 4. Main Function - ERROR FIXED HERE
-    window.askAI = async function() {
-        const btn = document.getElementById('sendBtn');
-        const out = document.getElementById('output');
-        const prompt = document.getElementById('promptInput').value;
-        const key = localStorage.getItem("my_gemini_key");
+   window.askAI = async function() {
+    const out = document.getElementById('output');
+    const key = localStorage.getItem("my_gemini_key");
+    const prompt = document.getElementById('promptInput').value;
 
-        if (!prompt) return alert("Pehle kuch likhen!");
+    try {
+        const genAI = new GoogleGenerativeAI(key);
+        
+        // Yahan 'gemini-1.5-flash-latest' use karein
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
-        btn.disabled = true;
-        btn.innerText = "Soch raha hoon...";
-        out.innerText = "Processing...";
-
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        out.innerText = response.text();
+    } catch (err) {
+        // Agar fir bhi 404 aaye, toh 'gemini-pro' try karein automatically
+        console.log("Retrying with gemini-pro...");
         try {
             const genAI = new GoogleGenerativeAI(key);
-            
-            // FIXED: Using "gemini-1.5-flash" (latest version)
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
+            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
             const result = await model.generateContent(prompt);
             const response = await result.response;
             out.innerText = response.text();
-            
-        } catch (err) {
-            console.error(err);
-            out.innerHTML = `<b style="color:#fb7185">Error:</b><br>${err.message}`;
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Jawab Payein";
+        } catch (retryErr) {
+            out.innerHTML = `<b style="color:red">Final Error:</b> ${retryErr.message}`;
         }
     }
-
+}
     init();
 </script>
 
