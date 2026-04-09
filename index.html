@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini AI Project - Junior Devlok</title>
+    <style>
+        /* CSS: Styling for the app */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 { color: #4a148c; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            background: #ff4081;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover { background: #e91e63; transform: scale(1.05); }
+
+        #response {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 5px solid #ff4081;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+
+        .loading { color: #764ba2; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Junior Devlok AI</h1>
+        <p>Apna sawal niche likhein aur Gemini se answer payein</p>
+        
+        <input type="text" id="userInput" placeholder="Ask anything... (e.g. Write a poem)">
+        <button onclick="askGemini()">Ask AI ✨</button>
+
+        <div id="response">Response yahan dikhega...</div>
+    </div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // API setup
+        const API_KEY = "AIzaSyB1r_YhsYlNqthClRCXDsx39YlZRfvFM8k";
+        const genAI = new GoogleGenerativeAI(API_KEY);
+
+        window.askGemini = async function() {
+            const input = document.getElementById('userInput').value;
+            const output = document.getElementById('response');
+
+            if (!input) {
+                alert("Pehle kuch likho toh sahi!");
+                return;
+            }
+
+            output.innerHTML = '<span class="loading">Gemini soch raha hai... ⏳</span>';
+
+            try {
+                // Model initialize (Flash model fast hota hai)
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                
+                const result = await model.generateContent(input);
+                const response = await result.response;
+                const text = response.text();
+
+                // UI update
+                output.innerText = text;
+            } catch (error) {
+                output.innerHTML = '<span style="color:red">Error: API Key block ho gayi ya limit khatam ho gayi.</span>';
+                console.error("Error details:", error);
+            }
+        }
+    </script>
+</body>
+</html>
