@@ -3,119 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal AI Playground | Junior Devlok</title>
+    <title>Universal AI Dashboard | Junior Devlok</title>
     <style>
-        :root { --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --accent: #238636; --border: #30363d; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; }
+        :root { --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --accent: #238636; --border: #30363d; --error: #f85149; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar for Settings */
-        .sidebar { width: 320px; background: var(--card); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        h2 { color: white; font-size: 1.2rem; margin-top: 0; }
-        label { font-size: 12px; color: #8b949e; font-weight: bold; }
-        input, select, textarea { background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        /* Sidebar */
+        .sidebar { width: 350px; background: var(--card); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        h2 { color: white; font-size: 1.4rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px; }
+        label { font-size: 11px; color: #8b949e; font-weight: bold; text-transform: uppercase; }
+        input, select, textarea { background: var(--bg); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
+        input:focus { border-color: #58a6ff; outline: none; }
         
-        /* Main Chat Area */
-        .main { flex: 1; display: flex; flex-direction: column; padding: 20px; position: relative; }
-        #chatDisplay { flex: 1; overflow-y: auto; background: var(--card); border-radius: 8px; border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; }
-        .input-group { display: flex; gap: 10px; }
+        /* Main Section */
+        .main { flex: 1; display: flex; flex-direction: column; padding: 20px; background: var(--bg); }
+        #chatDisplay { flex: 1; overflow-y: auto; background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 25px; margin-bottom: 20px; scroll-behavior: smooth; }
         
-        button { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+        /* Chat Bubbles */
+        .msg { margin-bottom: 20px; padding: 15px; border-radius: 8px; line-height: 1.6; position: relative; }
+        .user-msg { background: #1f2937; border-left: 4px solid #58a6ff; color: #adbac7; }
+        .ai-msg { background: #21262d; border-left: 4px solid var(--accent); color: #ecf2f8; }
+        .tag { font-size: 10px; background: #30363d; padding: 2px 8px; border-radius: 10px; position: absolute; top: -10px; right: 10px; color: #8b949e; border: 1px solid var(--border); }
 
-        .tag { font-size: 10px; background: #21262d; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 5px; display: inline-block; }
-        .user-msg { color: #58a6ff; font-weight: bold; margin-bottom: 15px; }
-        .ai-msg { color: #d1d5db; margin-bottom: 25px; line-height: 1.6; border-bottom: 1px solid #21262d; padding-bottom: 15px; }
+        /* Controls */
+        .input-group { display: flex; gap: 15px; align-items: flex-end; }
+        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        button:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+        .btn-secondary { background: #30363d; font-size: 12px; padding: 10px; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>⚙️ Configuration</h2>
+    <h2>🚀 AI Playground</h2>
     
-    <label>API PROVIDER</label>
-    <select id="provider" onchange="updatePresets()">
+    <label>Platform Preset</label>
+    <select id="provider" onchange="applyPreset()">
         <option value="groq">Groq Cloud (Llama 3)</option>
-        <option value="gemini">Google Gemini</option>
-        <option value="openai">OpenAI (GPT-4o)</option>
-        <option value="custom">Custom Endpoint</option>
+        <option value="gemini">Google Gemini (OpenAI Mode)</option>
+        <option value="openai">OpenAI (GPT Models)</option>
+        <option value="custom">Custom API</option>
     </select>
 
-    <label>BASE URL</label>
+    <label>API Endpoint (Base URL)</label>
     <input type="text" id="baseUrl" value="https://api.groq.com/openai/v1/chat/completions">
 
-    <label>API KEY</label>
-    <input type="password" id="apiKey" placeholder="sk-..." value="">
+    <label>Secret API Key</label>
+    <input type="password" id="apiKey" placeholder="gsk_... or sk-...">
 
-    <label>MODEL NAME</label>
+    <label>Model ID</label>
     <input type="text" id="modelName" value="llama3-8b-8192">
 
-    <p style="font-size: 11px; color: #8b949e;">*Settings automatic browser mein save ho jayengi.</p>
-    <button onclick="saveConfig()" style="background:#30363d">Save Settings</button>
+    <button onclick="saveSettings()">Save Configuration ✅</button>
+    <button class="btn-secondary" onclick="clearChat()">Clear Chat History 🗑️</button>
+    
+    <div style="font-size: 11px; color: #8b949e; margin-top: auto;">
+        <b>Status:</b> <span id="statusIndicator" style="color: #8b949e;">Ready</span><br>
+        Keys aapke local browser mein save hain.
+    </div>
 </div>
 
 <div class="main">
     <div id="chatDisplay">
-        <div class="ai-msg">System: Taiyaar hai! Configuration check karein aur sawal puchein.</div>
+        <div class="ai-msg">
+            <b>System:</b> Swagat hai! Apni API details sidebar mein bhariye aur chat shuru kijiye.
+        </div>
     </div>
 
     <div class="input-group">
-        <textarea id="promptInput" rows="2" placeholder="Write your message here..."></textarea>
-        <button id="sendBtn" onclick="executeAI()">SEND</button>
+        <textarea id="promptInput" rows="2" placeholder="AI se kuch puchiye..."></textarea>
+        <button id="sendBtn" onclick="executeAI()">SEND ✨</button>
     </div>
 </div>
 
 <script>
-    // Load saved settings
+    // 1. Load Data on Startup
     window.onload = () => {
-        const config = JSON.parse(localStorage.getItem('ai_config') || '{}');
-        if(config.apiKey) {
-            document.getElementById('apiKey').value = config.apiKey;
-            document.getElementById('baseUrl').value = config.baseUrl;
-            document.getElementById('modelName').value = config.modelName;
-            document.getElementById('provider').value = config.provider;
+        const saved = JSON.parse(localStorage.getItem('universal_ai_v2') || '{}');
+        if(saved.apiKey) {
+            document.getElementById('apiKey').value = saved.apiKey;
+            document.getElementById('baseUrl').value = saved.baseUrl;
+            document.getElementById('modelName').value = saved.modelName;
+            document.getElementById('provider').value = saved.provider;
         }
     };
 
-    function updatePresets() {
+    // 2. Presets Logic
+    function applyPreset() {
         const p = document.getElementById('provider').value;
         const b = document.getElementById('baseUrl');
         const m = document.getElementById('modelName');
 
-        if(p === 'groq') {
-            b.value = "https://api.groq.com/openai/v1/chat/completions";
-            m.value = "llama3-8b-8192";
-        } else if(p === 'openai') {
-            b.value = "https://api.openai.com/v1/chat/completions";
-            m.value = "gpt-3.5-turbo";
-        } else if(p === 'gemini') {
-            b.value = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-            m.value = "gemini-1.5-flash";
+        const presets = {
+            groq: { url: "https://api.groq.com/openai/v1/chat/completions", model: "llama3-8b-8192" },
+            gemini: { url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", model: "gemini-1.5-flash" },
+            openai: { url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" }
+        };
+
+        if(presets[p]) {
+            b.value = presets[p].url;
+            m.value = presets[p].model;
         }
     }
 
-    function saveConfig() {
-        const config = {
+    // 3. Save to LocalStorage
+    function saveSettings() {
+        const settings = {
             provider: document.getElementById('provider').value,
             baseUrl: document.getElementById('baseUrl').value,
             apiKey: document.getElementById('apiKey').value,
             modelName: document.getElementById('modelName').value
         };
-        localStorage.setItem('ai_config', JSON.stringify(config));
-        alert("Settings Saved locally!");
+        localStorage.setItem('universal_ai_v2', JSON.stringify(settings));
+        alert("Settings saved successfully!");
     }
 
+    function clearChat() {
+        document.getElementById('chatDisplay').innerHTML = '<div class="ai-msg">Chat cleared. Ready for new questions.</div>';
+    }
+
+    // 4. MAIN EXECUTION LOGIC
     async function executeAI() {
         const btn = document.getElementById('sendBtn');
         const display = document.getElementById('chatDisplay');
-        const prompt = document.getElementById('promptInput').value;
-        const config = JSON.parse(localStorage.getItem('ai_config'));
+        const input = document.getElementById('promptInput');
+        const status = document.getElementById('statusIndicator');
+        
+        const config = JSON.parse(localStorage.getItem('universal_ai_v2'));
+        const prompt = input.value.trim();
 
-        if(!prompt || !config.apiKey) return alert("Prompt aur API Key dono zaroori hain!");
+        if(!prompt) return;
+        if(!config || !config.apiKey) return alert("Pehle Settings save karein!");
 
-        display.innerHTML += `<div class="user-msg">You: ${prompt}</div>`;
-        document.getElementById('promptInput').value = "";
+        // Update UI
+        display.innerHTML += `<div class="msg user-msg"><b>You:</b><br>${prompt}</div>`;
+        input.value = "";
         btn.disabled = true;
+        status.innerText = "Thinking...";
+        status.style.color = "#e3b341";
 
         try {
             const response = await fetch(config.baseUrl, {
@@ -126,15 +155,40 @@
                 },
                 body: JSON.stringify({
                     model: config.modelName,
-                    messages: [{role: "user", content: prompt}]
+                    messages: [{ role: "user", content: prompt }]
                 })
             });
 
             const data = await response.json();
-            const reply = data.choices[0].message.content;
-            display.innerHTML += `<div class="ai-msg"><div class="tag">${config.modelName}</div><br>${reply}</div>`;
+            console.log("Raw Response:", data);
+
+            let finalReply = "";
+
+            // --- SMART PARSING STARTS HERE ---
+            if (data.error) {
+                finalReply = `<span style="color:var(--error)">API Error: ${data.error.message}</span>`;
+            } else if (data.choices && data.choices[0] && data.choices[0].message) {
+                finalReply = data.choices[0].message.content; // OpenAI/Groq/Gemini-OpenAI-Mode
+            } else if (data.candidates && data.candidates[0]) {
+                finalReply = data.candidates[0].content.parts[0].text; // Pure Gemini Mode
+            } else {
+                finalReply = "Sorry, response format samajh nahi aaya. Console check karein.";
+            }
+            // --- SMART PARSING ENDS ---
+
+            display.innerHTML += `
+                <div class="msg ai-msg">
+                    <span class="tag">${config.modelName}</span>
+                    ${finalReply}
+                </div>`;
+            
+            status.innerText = "Online";
+            status.style.color = "#238636";
+
         } catch (err) {
-            display.innerHTML += `<div style="color:red">Error: ${err.message}</div>`;
+            display.innerHTML += `<div class="msg" style="color:var(--error)"><b>Network Error:</b> ${err.message}</div>`;
+            status.innerText = "Error";
+            status.style.color = "red";
         } finally {
             btn.disabled = false;
             display.scrollTop = display.scrollHeight;
