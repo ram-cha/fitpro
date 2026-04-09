@@ -3,93 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Fixed - Junior Devlok</title>
+    <title>Universal AI Playground | Junior Devlok</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #1e293b; padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; }
-        h2 { color: #38bdf8; margin-top: 0; text-align: center; }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #0ea5e9; }
-        .reset-btn { background: transparent; color: #94a3b8; font-size: 12px; text-decoration: underline; margin-top: 10px; cursor: pointer; border: none; }
-        #output { margin-top: 20px; padding: 15px; background: #334155; border-radius: 8px; min-height: 40px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; border-left: 4px solid #38bdf8; }
-        .hidden { display: none; }
+        :root { --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --accent: #238636; --border: #30363d; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; }
+        
+        /* Sidebar for Settings */
+        .sidebar { width: 320px; background: var(--card); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        h2 { color: white; font-size: 1.2rem; margin-top: 0; }
+        label { font-size: 12px; color: #8b949e; font-weight: bold; }
+        input, select, textarea { background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        
+        /* Main Chat Area */
+        .main { flex: 1; display: flex; flex-direction: column; padding: 20px; position: relative; }
+        #chatDisplay { flex: 1; overflow-y: auto; background: var(--card); border-radius: 8px; border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; }
+        .input-group { display: flex; gap: 10px; }
+        
+        button { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+
+        .tag { font-size: 10px; background: #21262d; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 5px; display: inline-block; }
+        .user-msg { color: #58a6ff; font-weight: bold; margin-bottom: 15px; }
+        .ai-msg { color: #d1d5db; margin-bottom: 25px; line-height: 1.6; border-bottom: 1px solid #21262d; padding-bottom: 15px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Gemini AI Fixed ✨</h2>
+<div class="sidebar">
+    <h2>⚙️ Configuration</h2>
+    
+    <label>API PROVIDER</label>
+    <select id="provider" onchange="updatePresets()">
+        <option value="groq">Groq Cloud (Llama 3)</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="openai">OpenAI (GPT-4o)</option>
+        <option value="custom">Custom Endpoint</option>
+    </select>
 
-    <div id="keyBox">
-        <p style="font-size: 13px;">Apni Nayi API Key yahan daalein:</p>
-        <input type="password" id="keyInput" placeholder="Paste API Key here...">
-        <button onclick="saveKey()">Connect Gemini</button>
+    <label>BASE URL</label>
+    <input type="text" id="baseUrl" value="https://api.groq.com/openai/v1/chat/completions">
+
+    <label>API KEY</label>
+    <input type="password" id="apiKey" placeholder="sk-..." value="">
+
+    <label>MODEL NAME</label>
+    <input type="text" id="modelName" value="llama3-8b-8192">
+
+    <p style="font-size: 11px; color: #8b949e;">*Settings automatic browser mein save ho jayengi.</p>
+    <button onclick="saveConfig()" style="background:#30363d">Save Settings</button>
+</div>
+
+<div class="main">
+    <div id="chatDisplay">
+        <div class="ai-msg">System: Taiyaar hai! Configuration check karein aur sawal puchein.</div>
     </div>
 
-    <div id="chatBox" class="hidden">
-        <textarea id="promptInput" rows="3" placeholder="Kuch bhi puchein..."></textarea>
-        <button id="sendBtn" onclick="askAI()">Jawab Payein</button>
-        <div id="output">AI ka jawab yahan aayega...</div>
-        <center><button class="reset-btn" onclick="reset()">Reset API Key</button></center>
+    <div class="input-group">
+        <textarea id="promptInput" rows="2" placeholder="Write your message here..."></textarea>
+        <button id="sendBtn" onclick="executeAI()">SEND</button>
     </div>
 </div>
 
-<script type="module">
-    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+<script>
+    // Load saved settings
+    window.onload = () => {
+        const config = JSON.parse(localStorage.getItem('ai_config') || '{}');
+        if(config.apiKey) {
+            document.getElementById('apiKey').value = config.apiKey;
+            document.getElementById('baseUrl').value = config.baseUrl;
+            document.getElementById('modelName').value = config.modelName;
+            document.getElementById('provider').value = config.provider;
+        }
+    };
 
-    // 1. Check if Key exists
-    function init() {
-        if (localStorage.getItem("my_gemini_key")) {
-            document.getElementById('keyBox').classList.add('hidden');
-            document.getElementById('chatBox').classList.remove('hidden');
+    function updatePresets() {
+        const p = document.getElementById('provider').value;
+        const b = document.getElementById('baseUrl');
+        const m = document.getElementById('modelName');
+
+        if(p === 'groq') {
+            b.value = "https://api.groq.com/openai/v1/chat/completions";
+            m.value = "llama3-8b-8192";
+        } else if(p === 'openai') {
+            b.value = "https://api.openai.com/v1/chat/completions";
+            m.value = "gpt-3.5-turbo";
+        } else if(p === 'gemini') {
+            b.value = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+            m.value = "gemini-1.5-flash";
         }
     }
 
-    // 2. Save Key
-    window.saveKey = function() {
-        const key = document.getElementById('keyInput').value.trim();
-        if (key.length < 30) return alert("Sahi key daalein!");
-        localStorage.setItem("my_gemini_key", key);
-        location.reload();
+    function saveConfig() {
+        const config = {
+            provider: document.getElementById('provider').value,
+            baseUrl: document.getElementById('baseUrl').value,
+            apiKey: document.getElementById('apiKey').value,
+            modelName: document.getElementById('modelName').value
+        };
+        localStorage.setItem('ai_config', JSON.stringify(config));
+        alert("Settings Saved locally!");
     }
 
-    // 3. Reset Key
-    window.reset = function() {
-        localStorage.removeItem("my_gemini_key");
-        location.reload();
-    }
+    async function executeAI() {
+        const btn = document.getElementById('sendBtn');
+        const display = document.getElementById('chatDisplay');
+        const prompt = document.getElementById('promptInput').value;
+        const config = JSON.parse(localStorage.getItem('ai_config'));
 
-    // 4. Main Function - ERROR FIXED HERE
-   window.askAI = async function() {
-    const out = document.getElementById('output');
-    const key = localStorage.getItem("my_gemini_key");
-    const prompt = document.getElementById('promptInput').value;
+        if(!prompt || !config.apiKey) return alert("Prompt aur API Key dono zaroori hain!");
 
-    try {
-        const genAI = new GoogleGenerativeAI(key);
-        
-        // Yahan 'gemini-1.5-flash-latest' use karein
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        display.innerHTML += `<div class="user-msg">You: ${prompt}</div>`;
+        document.getElementById('promptInput').value = "";
+        btn.disabled = true;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        out.innerText = response.text();
-    } catch (err) {
-        // Agar fir bhi 404 aaye, toh 'gemini-pro' try karein automatically
-        console.log("Retrying with gemini-pro...");
         try {
-            const genAI = new GoogleGenerativeAI(key);
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            out.innerText = response.text();
-        } catch (retryErr) {
-            out.innerHTML = `<b style="color:red">Final Error:</b> ${retryErr.message}`;
+            const response = await fetch(config.baseUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${config.apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: config.modelName,
+                    messages: [{role: "user", content: prompt}]
+                })
+            });
+
+            const data = await response.json();
+            const reply = data.choices[0].message.content;
+            display.innerHTML += `<div class="ai-msg"><div class="tag">${config.modelName}</div><br>${reply}</div>`;
+        } catch (err) {
+            display.innerHTML += `<div style="color:red">Error: ${err.message}</div>`;
+        } finally {
+            btn.disabled = false;
+            display.scrollTop = display.scrollHeight;
         }
     }
-}
-    init();
 </script>
 
 </body>
