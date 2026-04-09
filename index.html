@@ -3,117 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini AI Project - Junior Devlok</title>
+    <title>Safe Gemini Project - Junior Devlok</title>
     <style>
-        /* CSS: Styling for the app */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            color: #333;
+        :root { --primary: #6200ea; --secondary: #03dab6; }
+        body { font-family: sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: #1e1e1e; padding: 2rem; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #333; }
+        
+        h1 { color: var(--secondary); margin-top: 0; }
+        .key-section { background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; }
+        
+        input, textarea { 
+            width: 100%; padding: 12px; margin: 10px 0; background: #2c2c2c; border: 1px solid #444; 
+            color: white; border-radius: 8px; box-sizing: border-box; 
         }
-
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
+        
+        button { 
+            background: var(--primary); color: white; border: none; padding: 12px 20px; 
+            border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s;
         }
+        button:hover { background: #7c4dff; }
+        button.secondary { background: #444; margin-top: 5px; font-size: 12px; }
 
-        h1 { color: #4a148c; margin-bottom: 10px; }
-        p { color: #666; font-size: 14px; }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 20px 0;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            box-sizing: border-box;
-            font-size: 16px;
+        #output { 
+            margin-top: 20px; padding: 15px; background: #262626; border-radius: 8px; 
+            min-height: 50px; border-left: 4px solid var(--secondary); white-space: pre-wrap;
         }
-
-        button {
-            background: #ff4081;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        button:hover { background: #e91e63; transform: scale(1.05); }
-
-        #response {
-            margin-top: 25px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-left: 5px solid #ff4081;
-            text-align: left;
-            max-height: 300px;
-            overflow-y: auto;
-            border-radius: 5px;
-            white-space: pre-wrap;
-        }
-
-        .loading { color: #764ba2; font-style: italic; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Junior Devlok AI</h1>
-        <p>Apna sawal niche likhein aur Gemini se answer payein</p>
-        
-        <input type="text" id="userInput" placeholder="Ask anything... (e.g. Write a poem)">
-        <button onclick="askGemini()">Ask AI ✨</button>
+<div class="container">
+    <h1>Junior Devlok AI</h1>
 
-        <div id="response">Response yahan dikhega...</div>
+    <div id="setupSection" class="key-section">
+        <p>⚠️ Pehle apni API Key set karein (Ye aapke browser mein save rahegi):</p>
+        <input type="password" id="apiKeyInput" placeholder="Paste Gemini API Key here...">
+        <button onclick="saveKey()">Save Key ✅</button>
     </div>
 
-    <script type="module">
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+    <div id="chatSection" class="hidden">
+        <p id="keyStatus" style="color: #03dab6; font-size: 12px;">Key Saved! Click 'Reset' to change.</p>
+        <textarea id="userInput" rows="3" placeholder="Apna sawal likhein..."></textarea>
+        <button id="askBtn" onclick="askGemini()">AI se Puchein ✨</button>
+        <button class="secondary" onclick="resetKey()">Reset API Key ⚙️</button>
+        
+        <div id="output">Jawab yahan dikhega...</div>
+    </div>
+</div>
 
-        // API setup
-        const API_KEY = "AIzaSyBZ14obdrRdwRsQY3uCNonuhvI-vn96LMo";
-        const genAI = new GoogleGenerativeAI(API_KEY);
+<script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        window.askGemini = async function() {
-            const input = document.getElementById('userInput').value;
-            const output = document.getElementById('response');
-
-            if (!input) {
-                alert("Pehle kuch likho toh sahi!");
-                return;
-            }
-
-            output.innerHTML = '<span class="loading">Gemini soch raha hai... ⏳</span>';
-
-            try {
-                // Model initialize (Flash model fast hota hai)
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                
-                const result = await model.generateContent(input);
-                const response = await result.response;
-                const text = response.text();
-
-                // UI update
-                output.innerText = text;
-            } catch (error) {
-                output.innerHTML = '<span style="color:red">Error: API Key block ho gayi ya limit khatam ho gayi.</span>';
-                console.error("Error details:", error);
-            }
+    // LocalStorage se key check karein
+    function checkKey() {
+        const savedKey = localStorage.getItem("gemini_api_key");
+        if (savedKey) {
+            document.getElementById('setupSection').classList.add('hidden');
+            document.getElementById('chatSection').classList.remove('hidden');
+        } else {
+            document.getElementById('setupSection').classList.remove('hidden');
+            document.getElementById('chatSection').classList.add('hidden');
         }
-    </script>
+    }
+
+    // Key Save karne ka function
+    window.saveKey = function() {
+        const key = document.getElementById('apiKeyInput').value;
+        if (key.length < 20) {
+            alert("Please enter a valid API Key!");
+            return;
+        }
+        localStorage.setItem("gemini_api_key", key);
+        checkKey();
+    };
+
+    // Key Reset karne ka function
+    window.resetKey = function() {
+        localStorage.removeItem("gemini_api_key");
+        checkKey();
+    };
+
+    // AI se baat karne ka function
+    window.askGemini = async function() {
+        const userText = document.getElementById('userInput').value;
+        const outputDiv = document.getElementById('output');
+        const apiKey = localStorage.getItem("gemini_api_key");
+
+        if (!userText) return alert("Kuch toh likho!");
+
+        outputDiv.innerText = "AI soch raha hai... ⏳";
+
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            const result = await model.generateContent(userText);
+            const response = await result.response;
+            outputDiv.innerText = response.text();
+        } catch (error) {
+            outputDiv.innerHTML = `<span style="color:red">Error: ${error.message}. Shayad API key galat hai ya net band hai.</span>`;
+        }
+    };
+
+    // Page load par check karein
+    checkKey();
+</script>
+
 </body>
 </html>
