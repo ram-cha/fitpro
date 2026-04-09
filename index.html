@@ -3,115 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safe Gemini Project - Junior Devlok</title>
+    <title>Gemini Fixed - Junior Devlok</title>
     <style>
-        :root { --primary: #6200ea; --secondary: #03dab6; }
-        body { font-family: sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: #1e1e1e; padding: 2rem; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #333; }
-        
-        h1 { color: var(--secondary); margin-top: 0; }
-        .key-section { background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; }
-        
-        input, textarea { 
-            width: 100%; padding: 12px; margin: 10px 0; background: #2c2c2c; border: 1px solid #444; 
-            color: white; border-radius: 8px; box-sizing: border-box; 
-        }
-        
-        button { 
-            background: var(--primary); color: white; border: none; padding: 12px 20px; 
-            border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s;
-        }
-        button:hover { background: #7c4dff; }
-        button.secondary { background: #444; margin-top: 5px; font-size: 12px; }
-
-        #output { 
-            margin-top: 20px; padding: 15px; background: #262626; border-radius: 8px; 
-            min-height: 50px; border-left: 4px solid var(--secondary); white-space: pre-wrap;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        h2 { color: #38bdf8; margin-top: 0; text-align: center; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #0ea5e9; }
+        .reset-btn { background: transparent; color: #94a3b8; font-size: 12px; text-decoration: underline; margin-top: 10px; cursor: pointer; border: none; }
+        #output { margin-top: 20px; padding: 15px; background: #334155; border-radius: 8px; min-height: 40px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; border-left: 4px solid #38bdf8; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Junior Devlok AI</h1>
+<div class="card">
+    <h2>Gemini AI Fixed ✨</h2>
 
-    <div id="setupSection" class="key-section">
-        <p>⚠️ Pehle apni API Key set karein (Ye aapke browser mein save rahegi):</p>
-        <input type="password" id="apiKeyInput" placeholder="Paste Gemini API Key here...">
-        <button onclick="saveKey()">Save Key ✅</button>
+    <div id="keyBox">
+        <p style="font-size: 13px;">Apni Nayi API Key yahan daalein:</p>
+        <input type="password" id="keyInput" placeholder="Paste API Key here...">
+        <button onclick="saveKey()">Connect Gemini</button>
     </div>
 
-    <div id="chatSection" class="hidden">
-        <p id="keyStatus" style="color: #03dab6; font-size: 12px;">Key Saved! Click 'Reset' to change.</p>
-        <textarea id="userInput" rows="3" placeholder="Apna sawal likhein..."></textarea>
-        <button id="askBtn" onclick="askGemini()">AI se Puchein ✨</button>
-        <button class="secondary" onclick="resetKey()">Reset API Key ⚙️</button>
-        
-        <div id="output">Jawab yahan dikhega...</div>
+    <div id="chatBox" class="hidden">
+        <textarea id="promptInput" rows="3" placeholder="Kuch bhi puchein..."></textarea>
+        <button id="sendBtn" onclick="askAI()">Jawab Payein</button>
+        <div id="output">AI ka jawab yahan aayega...</div>
+        <center><button class="reset-btn" onclick="reset()">Reset API Key</button></center>
     </div>
 </div>
 
 <script type="module">
     import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-    // LocalStorage se key check karein
-    function checkKey() {
-        const savedKey = localStorage.getItem("gemini_api_key");
-        if (savedKey) {
-            document.getElementById('setupSection').classList.add('hidden');
-            document.getElementById('chatSection').classList.remove('hidden');
-        } else {
-            document.getElementById('setupSection').classList.remove('hidden');
-            document.getElementById('chatSection').classList.add('hidden');
+    // 1. Check if Key exists
+    function init() {
+        if (localStorage.getItem("my_gemini_key")) {
+            document.getElementById('keyBox').classList.add('hidden');
+            document.getElementById('chatBox').classList.remove('hidden');
         }
     }
 
-    // Key Save karne ka function
+    // 2. Save Key
     window.saveKey = function() {
-        const key = document.getElementById('apiKeyInput').value;
-        if (key.length < 20) {
-            alert("Please enter a valid API Key!");
-            return;
-        }
-        localStorage.setItem("gemini_api_key", key);
-        checkKey();
-    };
-
-    // Key Reset karne ka function
-    window.resetKey = function() {
-        localStorage.removeItem("gemini_api_key");
-        checkKey();
-    };
-
-    // AI se baat karne ka function
-window.askGemini = async function() {
-    const userText = document.getElementById('userInput').value;
-    const outputDiv = document.getElementById('output');
-    const apiKey = localStorage.getItem("gemini_api_key");
-
-    if (!userText) return alert("Kuch toh likho!");
-
-    outputDiv.innerText = "AI soch raha hai... ⏳";
-
-    try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        
-        // YAHAN BADLAV KIYA HAI: 'gemini-pro' try karein
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-        const result = await model.generateContent(userText);
-        const response = await result.response;
-        outputDiv.innerText = response.text();
-    } catch (error) {
-        console.error(error);
-        // Agar gemini-pro bhi fail ho toh gemini-1.5-flash-latest try karein
-        outputDiv.innerHTML = `<span style="color:red">Error: ${error.message}</span>`;
+        const key = document.getElementById('keyInput').value.trim();
+        if (key.length < 30) return alert("Sahi key daalein!");
+        localStorage.setItem("my_gemini_key", key);
+        location.reload();
     }
-};
 
-    // Page load par check karein
-    checkKey();
+    // 3. Reset Key
+    window.reset = function() {
+        localStorage.removeItem("my_gemini_key");
+        location.reload();
+    }
+
+    // 4. Main Function - ERROR FIXED HERE
+    window.askAI = async function() {
+        const btn = document.getElementById('sendBtn');
+        const out = document.getElementById('output');
+        const prompt = document.getElementById('promptInput').value;
+        const key = localStorage.getItem("my_gemini_key");
+
+        if (!prompt) return alert("Pehle kuch likhen!");
+
+        btn.disabled = true;
+        btn.innerText = "Soch raha hoon...";
+        out.innerText = "Processing...";
+
+        try {
+            const genAI = new GoogleGenerativeAI(key);
+            
+            // FIXED: Using "gemini-1.5-flash" (latest version)
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            out.innerText = response.text();
+            
+        } catch (err) {
+            console.error(err);
+            out.innerHTML = `<b style="color:#fb7185">Error:</b><br>${err.message}`;
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Jawab Payein";
+        }
+    }
+
+    init();
 </script>
 
 </body>
